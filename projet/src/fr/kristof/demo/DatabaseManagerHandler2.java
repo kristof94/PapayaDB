@@ -22,12 +22,10 @@ public class DatabaseManagerHandler2 implements DataBaseHandler{
 	ObjectMapper mapper = new ObjectMapper();
 	
 	DatabaseClient client = new DatabaseClient();
-	private final String ip;
 
 	public DatabaseManagerHandler2(String ip){
 		client.setLogin(new Login("demo","password"));
 		client.setSSLWithKeystore("/home/master/Data/workspace_2/DatabaseClient/keystore.jks");
-		this.ip = ip;
 	}
 	
 	/* (non-Javadoc)

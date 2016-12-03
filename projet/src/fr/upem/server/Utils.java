@@ -22,9 +22,7 @@ public class Utils {
 		if (authorization != null && authorization.substring(0, 6).equals("Basic ")) {
 			String identifiant = authorization.substring(6);
 			String login[] = Utils.decodeBase64(identifiant).split(":");
-			System.out.println("User : "+login[0]);			
-			System.out.println("Password : "+login[1]);
-			return true;
+			return (login[0].equals("admin") & login[1].equals("root"));			
 		}
 		return false;
 	}

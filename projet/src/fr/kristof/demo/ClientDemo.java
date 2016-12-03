@@ -18,7 +18,7 @@ public class ClientDemo {
 	
 	public static void main(String[] args) {		
 		DatabaseClient client = new DatabaseClient();
-		client.setLogin(new Login("demo","password"));
+		client.setLogin(new Login("admin","root"));
 		client.setSSLWithKeystore("/home/master/Data/workspace_2/DatabaseClient/keystore.jks");
 		try {
 			System.out.println(client.createDatabase(new Data("nomdeBDD1"), "https://127.0.0.1:8090/api/database"));

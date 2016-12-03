@@ -10,10 +10,10 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class ServerResponse {
 	
-	public static void jsonResponse(RoutingContext routingContext,String json){
-		routingContext.response().putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(json.length()))
+	public static void responseDatabase(RoutingContext routingContext,String text){
+		routingContext.response().putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(text.length()))
 		.putHeader("Content-type", "application/json")
-		.write(json)
+		.write(text)
 		.end();
 	}
 	

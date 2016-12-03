@@ -1,20 +1,17 @@
 package fr.upem.server;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
-import fr.upem.decoder.Decoder;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
 import io.vertx.core.net.JksOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.ext.web.handler.BodyHandler;
 
 /**
  * @author kristof This class describes the implementation of a custom vertx
@@ -23,22 +20,61 @@ import io.vertx.ext.web.handler.StaticHandler;
  */
 public class Server extends AbstractVerticle {
 
-	private int portHTTPS;
+	private final int portHTTPS;
+	private final int portHTTP;
+	private final String pathManageBdd = "/api/database/:name";
+	private final String pathBdd = "/api/database";
+	private final String pathInsertDoc = "/api/database/:name";
+	private final String pathManageDoc = "/api/database/:name/:namedoc";
+
+	private final DocumentManager documentManager;
+	private final DatabaseManager databaseManager;
 
 	/**
 	 * 
 	 * @param port
 	 */
-	public Server(int port) {
-		this.portHTTPS = port;
+	public Server(int portHTTP, int portHTTPS) {
+		this.portHTTPS = portHTTPS;
+		this.portHTTP = portHTTP;
+		documentManager = new DocumentManager();
+		databaseManager = new DatabaseManager();
 	}
 
-	@Override
-	public void start() throws Exception {
-		Router router = Router.router(vertx);
-		manageRouter(router);
-		router.route().handler(StaticHandler.create());
-		vertx.createHttpServer(createHttpSServerOptions()).requestHandler(router::accept).listen(portHTTPS);
+	private Map<String, Route> createRouteHTTP(Router routerHTTP) {
+		HashMap<String, Route> routeList = new HashMap<>();
+		routeList.put("insert", routerHTTP.route(HttpMethod.PUT, pathInsertDoc));
+		routeList.put("select", routerHTTP.route(HttpMethod.GET, pathManageDoc));
+		routeList.put("delete", routerHTTP.route(HttpMethod.DELETE, pathManageDoc));
+		return routeList;
+	}
+
+	private Map<String, Route> createRouteHTTPS(Router routerHTTPS) {
+		HashMap<String, Route> routeList = new HashMap<>();
+		routeList.put("create", routerHTTPS.route(HttpMethod.POST, pathBdd));
+		routeList.put("delete", routerHTTPS.route(HttpMethod.DELETE, pathManageBdd));
+		routeList.put("export", routerHTTPS.route(HttpMethod.GET, pathManageBdd));
+		return routeList;
+	}
+
+	private Map<String, Handler<RoutingContext>> createMapHandlerDatabase() {
+		HashMap<String, Handler<RoutingContext>> map = new HashMap<>();
+		map.put("create", databaseManager::createDatabase);
+		map.put("delete", databaseManager::removeDatabase);
+		map.put("export", databaseManager::exportDatabase);
+		return map;
+	}
+
+	private Map<String, Handler<RoutingContext>> createMapHandlerDocument() {
+		HashMap<String, Handler<RoutingContext>> map = new HashMap<>();
+		map.put("insert", documentManager::insertDocument);
+		map.put("delete", documentManager::deleteDocument);
+		map.put("select", documentManager::selectDocument);
+		return map;
+	}
+
+	private void joinRouteHandler(Map<String, Handler<RoutingContext>> mapHandler, Map<String, Route> mapRoute) {
+		mapRoute.forEach((k, v) -> v.handler(mapHandler.get(k)));
 	}
 
 	private HttpServerOptions createHttpSServerOptions() {
@@ -46,89 +82,23 @@ public class Server extends AbstractVerticle {
 				.setKeyStoreOptions(new JksOptions().setPath("keystore.jks").setPassword("direct11"));
 	}
 
-	private void manageRouter(Router router) {
-		Route postDbMethod = router.route(HttpMethod.POST, "/api/json/db");
-		Route rootMethod = router.route(HttpMethod.GET, "/api/json/");
-		Route insertDocMethod = router.route(HttpMethod.POST, "/api/json/document");
-
-		rootMethod.handler(this::manageRootRoutingContext);
-		postDbMethod.handler(this::manageDataBaseRoutingContext);
-		insertDocMethod.handler(this::manageInsertRoutingContext);
-
+	private void prepareRoute(Router routerHTTP,Router routerHTTPS){
+		Map<String, Route> mapRouteHTTP = createRouteHTTP(routerHTTP);
+		Map<String, Route> mapRouteHTTPS = createRouteHTTPS(routerHTTPS);
+		Map<String, Handler<RoutingContext>> mapDatabaseHandler = createMapHandlerDatabase();
+		Map<String, Handler<RoutingContext>> mapDocumentHandler = createMapHandlerDocument();
+		joinRouteHandler(mapDocumentHandler, mapRouteHTTP);
+		joinRouteHandler(mapDatabaseHandler, mapRouteHTTPS);
 	}
-
-	private void manageRootRoutingContext(RoutingContext routingContext) {
-		HttpServerRequest request = routingContext.request();
-		if (isAuthentified(request)) {
-			manageQueryRootFromHttpServer(routingContext);
-		} else {
-			ServerResponse.authentificationError(routingContext);
-			throw new IllegalStateException("No authentified.");
-		}
+	
+	@Override
+	public void start() throws Exception {
+		Router routerHTTP = Router.router(vertx);
+		Router routerHTTPS = Router.router(vertx);
+		prepareRoute(routerHTTP, routerHTTPS);
+		routerHTTP.route().handler(BodyHandler.create());
+		routerHTTPS.route().handler(BodyHandler.create());
+		vertx.createHttpServer(createHttpSServerOptions()).requestHandler(routerHTTPS::accept).listen(portHTTPS);
+		vertx.createHttpServer().requestHandler(routerHTTP::accept).listen(portHTTP);
 	}
-
-	private void manageInsertRoutingContext(RoutingContext routingContext) {
-		HttpServerRequest request = routingContext.request();
-		System.out.println(request.absoluteURI());
-		System.out.println(request.path());
-
-		manageQueryFromHttpServer(routingContext);
-	}
-
-	private boolean isAuthentified(HttpServerRequest request) {
-		String authorization = request.headers().get(HttpHeaders.AUTHORIZATION);
-		if (authorization != null && authorization.substring(0, 6).equals("Basic ")) {
-			String identifiant = authorization.substring(6);
-			System.out.println(Decoder.decode(identifiant));
-			return true;
-		}
-		return false;
-	}
-
-	private void manageDataBaseRoutingContext(RoutingContext routingContext) {
-		HttpServerRequest request = routingContext.request();
-		if (isAuthentified(request)) {
-			manageQueryFromHttpServer(routingContext);
-		} else {
-			ServerResponse.authentificationError(routingContext);
-			throw new IllegalStateException("No authentified.");
-		}
-	}
-
-	private void manageQueryFromHttpServer(RoutingContext routingContext) {
-		try {
-			Query query = Query.builtQueryWithParameters(routingContext.request(),Query.REGEX_DB);
-			String response = execQuery(query);
-			ServerResponse.jsonResponse(routingContext, Json.encodePrettily(response));
-		} catch (Exception e) {
-			ServerResponse.queryError(routingContext);
-		}
-	}
-
-	private void manageQueryRootFromHttpServer(RoutingContext routingContext) {
-		try {
-			RootMethod rootMethod = RootMethod.builtQueryWithParameters(routingContext.request(),RootMethod.REGEX_DB);
-			String response = execRootMethod(rootMethod);
-			ServerResponse.jsonResponse(routingContext, Json.encodePrettily(response));
-		} catch (Exception e) {
-			ServerResponse.queryError(routingContext);
-		}
-	}
-
-	private String execQuery(Query query) throws NoSuchMethodException, SecurityException, IllegalAccessException,
-	IllegalArgumentException, InvocationTargetException {
-		Class<Query> q = Query.class;
-		Method gs1Method = q.getMethod(query.getNameRequete(), new Class[] { Query.class });
-		String response = (String) gs1Method.invoke(q, new Object[] { query });
-		return response;
-	}
-
-	private String execRootMethod(RootMethod rootMethod) throws NoSuchMethodException, SecurityException, IllegalAccessException,
-	IllegalArgumentException, InvocationTargetException {
-		Class<RootMethod> q = RootMethod.class;
-		Method gs1Method = q.getMethod(rootMethod.getNameRequete(), new Class[] { RootMethod.class });
-		String response = (String) gs1Method.invoke(q, new Object[] { rootMethod });
-		return response;
-	}
-
 }

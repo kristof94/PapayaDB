@@ -27,18 +27,16 @@ public class Server extends AbstractVerticle {
 	private final String pathInsertDoc = "/api/database/:name";
 	private final String pathManageDoc = "/api/database/:name/:namedoc";
 
-	private final DocumentManager documentManager;
-	private final DatabaseManager databaseManager;
+	private final DataBaseHandler databaseManager;
 
 	/**
 	 * 
 	 * @param port
 	 */
-	public Server(int portHTTP, int portHTTPS) {
+	public Server(int portHTTP, int portHTTPS,DataBaseHandler dataBaseHandler) {
 		this.portHTTPS = portHTTPS;
 		this.portHTTP = portHTTP;
-		documentManager = new DocumentManager();
-		databaseManager = new DatabaseManager();
+		this.databaseManager = dataBaseHandler;
 	}
 
 	private Map<String, Route> createRouteHTTP(Router routerHTTP) {
@@ -67,9 +65,9 @@ public class Server extends AbstractVerticle {
 
 	private Map<String, Handler<RoutingContext>> createMapHandlerDocument() {
 		HashMap<String, Handler<RoutingContext>> map = new HashMap<>();
-		map.put("insert", documentManager::insertDocument);
-		map.put("delete", documentManager::deleteDocument);
-		map.put("select", documentManager::selectDocument);
+		map.put("insert", databaseManager::insertDocument);
+		map.put("delete", databaseManager::deleteDocument);
+		map.put("select", databaseManager::selectDocument);
 		return map;
 	}
 

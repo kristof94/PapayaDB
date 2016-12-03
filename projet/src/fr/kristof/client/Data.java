@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fr.kristof.databaseclient;
+package fr.kristof.client;
 
 /**
  * @author master

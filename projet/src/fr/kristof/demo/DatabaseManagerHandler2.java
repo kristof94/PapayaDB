@@ -7,8 +7,8 @@ import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import fr.kristof.databaseclient.DatabaseClient;
-import fr.kristof.databaseclient.Login;
+import fr.kristof.client.DatabaseClient;
+import fr.kristof.client.Login;
 import fr.upem.server.DataBaseHandler;
 import fr.upem.server.ServerResponse;
 import io.vertx.ext.web.RoutingContext;

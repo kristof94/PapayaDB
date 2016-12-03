@@ -5,10 +5,10 @@ package fr.kristof.demo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import fr.kristof.databaseclient.Data;
-import fr.kristof.databaseclient.DatabaseClient;
-import fr.kristof.databaseclient.Login;
-import fr.kristof.databaseclient.Personne;
+import fr.kristof.client.Data;
+import fr.kristof.client.DatabaseClient;
+import fr.kristof.client.Login;
+import fr.kristof.client.Personne;
 
 /**
  * @author master

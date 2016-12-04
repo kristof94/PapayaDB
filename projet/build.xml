@@ -1,37 +1,57 @@
 <?xml version="1.0" ?>
 <project name="PapayaDb">
 
+	<property name="lib.dir"     value="vertx/lib"/>
+	<property name="build.dir"     value="build/jar"/>
+
 	<target name="clean">
 		<delete dir="build"/>
 	</target>
 
+	<path id="classpath">
+		<fileset dir="${lib.dir}" includes="**/*.jar"/>
+	</path>
+
+
+
 	<target name="compile">
 		<mkdir dir="build/classes"/>
-		<javac  includeantruntime="false"  srcdir="src" destdir="build/classes">			
-		    <classpath refid="classpath"/>
+		<javac  includeantruntime="false"  srcdir="src" destdir="build/classes" classpathref="classpath">
 		</javac>
 	</target>
 
-	<path id="classpath">
-			<fileset dir="vertx/lib/">
-				<include name="*.jar" />
+	<target name="unjar_dependencies" depends="clean">
+		<unzip dest="${build.dir}">
+			<fileset dir="${lib.dir}">
+				<include name="**/*.jar" />
 			</fileset>
-	</path>
+		</unzip>
+	</target>
 
-	
-	<target name="jar" depends="compile">
+	<target name="jar" depends="unjar_dependencies,compile">
 		<mkdir dir="build/jar"/>
-		<jar destfile="build/jar/RestServer.jar" basedir="build/classes">
+		<jar destfile="build/jar/RestServer.jar" basedir="build/classes" >
+			<fileset dir="${build.dir}">
+				<include name="**/*" />
+			</fileset>
 			<manifest>
 				<attribute name="Main-Class" value="fr.kristof.demo.ServerRest"/>
 			</manifest>
 		</jar>
+		<jar destfile="build/jar/DatabaseServer.jar" basedir="build/classes" >
+			<fileset dir="${build.dir}">
+				<include name="**/*" />
+			</fileset>
+			<manifest>
+				<attribute name="Main-Class" value="fr.kristof.demo.ServerDatabase"/>
+			</manifest>
+		</jar>
+		<jar destfile="build/jar/clientAPI.jar" basedir="build/classes/fr/kristof/client" >
+					<fileset dir="${build.dir}">
+						<include name="**/*" />
+					</fileset>
+		</jar>
 	</target>
 
-	<target name="run" depends="jar">
-		<java jar="build/jar/RestServer.jar" fork="true"/>
-	</target>
-
-	
-    <target name="clean-build" depends="clean,jar"/>
+	<target name="clean-build" depends="clean,jar"/>
 </project>

@@ -10,7 +10,7 @@ import io.vertx.core.Vertx;
  * @author kristof
  *
  */
-public class ServerBddDemo {
+public class ServerDatabase {
 
 	/**
 	 * @param args

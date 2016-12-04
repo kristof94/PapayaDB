@@ -10,20 +10,18 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.json.JsonArray;
-import javax.json.JsonException;
 import javax.json.JsonObject;
-import javax.json.JsonValue;
 
 public class Database {
 	private final FileChannel dbFileChannel;
 	private long fileLength;
 	private ArrayDeque<Pair<Integer, Document>> cache;
-	private final int cacheCapacity;
+	private int cacheCapacity;
+	private int deletedDocuments;
+	private int deletedDocumentsThreshold;
 	
 	public Database(Path filepath, int cacheCapacity) throws IOException{
 		dbFileChannel = FileChannel.open(filepath, StandardOpenOption.CREATE
@@ -60,15 +58,25 @@ public class Database {
 		return doc;
 	}
 	
+	private boolean uncacheDocument(String path) throws IOException{
+		int hash = path.hashCode();
+		for (Pair<Integer, Document> pair : cache){
+			if (pair.getV1() == hash){
+				cache.remove(pair);
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private List<String> getDocumentPaths() throws IOException{
 		List<String> paths = new ArrayList<String>();
 		MappedByteBuffer charBuffer = dbFileChannel.map(MapMode.READ_WRITE, 0, fileLength);
-		charBuffer.load();
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < fileLength; i++){
 			char c = (char)charBuffer.get();
 			if (c == '\n'){
-				String[] args = sb.toString().split("[ \0]");
+				String[] args = sb.toString().split("=");
 				if (args[1].trim().equals("0")){
 					sb.delete(0, sb.length());
 					continue;
@@ -79,17 +87,10 @@ public class Database {
 			}
 			sb.append(c);
 		}
-		if (sb.length() > 0){
-			String[] args = sb.toString().split("[ \0]");
-			if (args[1].trim().equals("0")){
-				return paths;
-			}
-			paths.add(args[0].trim());
-		}
 		return paths;
 	}
 	
-	public List<Map<String, String>> select(JsonObject request) throws IOException{
+	public List<Map<String, String>> select(String request) throws IOException{
 		List<Map<String, String>> results = new ArrayList<>();
 		List<String> paths = getDocumentPaths();
 		for (String path : paths){
@@ -102,37 +103,28 @@ public class Database {
 		return results;
 	}
 	
-	public void insert(String filepath, JsonValue object) throws IOException{
+	public void insert(String filepath, JsonObject jsonObject) throws IOException{
 		synchronized(dbFileChannel){
-			Document doc = Document.createDocument(filepath, object);
+			Document doc = Document.createDocument(filepath, jsonObject);
 			int length = filepath.length();
 			MappedByteBuffer map = dbFileChannel.map(MapMode.READ_WRITE, fileLength, length + 6);
 			map.put(filepath.getBytes());
-			map.put(" 1\n".getBytes());
+			map.put("=1\n".getBytes());
 			map.force();
 			cache(filepath, doc);
 		}
 	}
 	
-	public void delete(JsonObject request) throws Exception{
+	public void delete(String name) throws Exception{
 		synchronized(dbFileChannel){
-			JsonArray docsJson = request.getJsonArray("documents");
-			JsonObject where = request.getJsonObject("where");
-			List<String> docs = new ArrayList<>();
-			if (docsJson == null && where == null){
-				throw new JsonException("Could not find documents nor where field");
-			}
-			docsJson.forEach(d -> {
-				docs.add(d.toString().substring(1, d.toString().length() - 1));
-			});
+			uncacheDocument(name);
 			MappedByteBuffer charBuffer = dbFileChannel.map(MapMode.READ_WRITE, 0, fileLength);
-			charBuffer.load();
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < fileLength; i++){
 				char c = (char)charBuffer.get();
 				if (c == '\n'){
-					String[] args = sb.toString().split(" ");
-					if (docs.contains(args[0].trim()) && args[1].trim().equals("1")){
+					String sbStr = sb.toString();
+					if (sbStr.equals(name)){
 						charBuffer.position(charBuffer.position() - 2).putChar('0').getChar();
 					}
 					sb.delete(0, sb.length());
@@ -141,23 +133,9 @@ public class Database {
 					sb.append(c);
 				}
 			}
-			if (sb.length() > 0){
-				String[] args = sb.toString().split(" ");
-				if (docs.contains(args[0].trim()) && args[1].trim().equals("1")){
-					charBuffer.position(charBuffer.position() - 2);
-					charBuffer.putChar('0');
-					charBuffer.getChar();
-				}
-			}
-		}
-	}
-	
-	public void update(JsonObject request){
-		synchronized(dbFileChannel){
-			List<OldDocument> toUpdate = new ArrayList<>();
-			HashMap<String, Object> changes = new HashMap<>();
-			for (OldDocument document : toUpdate){
-				document.update(changes);
+			deletedDocuments++;
+			if (deletedDocuments >= deletedDocumentsThreshold){
+				rebuild();
 			}
 		}
 	}
@@ -167,5 +145,40 @@ public class Database {
 		while (cache.isEmpty() == false){
 			cache.pop().getV2().close();
 		}
+	}
+	
+	public void clear() throws IOException{
+		MappedByteBuffer map = dbFileChannel.map(MapMode.READ_WRITE, 0, fileLength);
+		map.clear();
+		map.force();
+		fileLength = 0;
+		cache.clear();
+	}
+	
+	public String export() throws IOException{
+		return select("").toString();
+	}
+	
+	public void rebuild() throws IOException{
+		MappedByteBuffer map = dbFileChannel.map(MapMode.READ_WRITE, 0, fileLength);
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < fileLength; i++){
+			char c = (char)map.get();
+			if (c == '\n'){
+				String[] args = sb.toString().split("=");
+				if (args[1].trim().equals("0")){
+					int length = 1 + args[0].length();
+					map.position(map.position() - length);
+					for (int j = 0; j < length; j++){
+						map.put((byte) ' ');
+					}
+				}
+				sb.delete(0, sb.length());
+				continue;
+			}
+			sb.append(c);
+		}
+		deletedDocuments = 0;
+		map.force();
 	}
 }

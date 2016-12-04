@@ -26,6 +26,8 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 
+import io.netty.handler.codec.http2.StreamByteDistributor.Writer;
+
 /**
  * A document is plit in two files: one for the data and one for the indexes<br>
  * example for a file named toto:<br>
@@ -60,10 +62,114 @@ public class Document {
 		return doc;
 	}
 	
-	public static Document createDocument(String filepath, JsonObject object) throws IOException{
+	public static Document createDocument(String filepath, JsonValue object) throws IOException{
 		Document doc = new Document(filepath);
 		doc.create(object);
 		return doc;
+	}
+	
+	private void fillDataArray(StringBuilder indexSb, StringBuilder dataSb, JsonArray arr, String s, Holder<Integer> index){
+		int i = 0;
+		for (JsonValue v : arr){
+			switch(v.getValueType()){
+				case ARRAY:
+					JsonArray jsonArray = (JsonArray)v;
+					fillDataArray(indexSb, dataSb, jsonArray, s + '[' + i + ']', index);
+					break;
+				case OBJECT:
+					JsonObject innerObj = (JsonObject)v;
+					fillDataObject(indexSb, dataSb, innerObj, s + '[' + i + ']', index);
+					break;
+				case NULL:
+					indexSb.append(s);
+					indexSb.append('[');
+					indexSb.append(i);
+					indexSb.append("]=");
+					indexSb.append(index.getValue());
+					indexSb.append(' ');
+					indexSb.append("-1\n");
+					break;
+				default:
+					String value = v.toString().replaceFirst("^\"", "").replaceFirst("\"$", "");
+					indexSb.append(s);
+					indexSb.append('[');
+					indexSb.append(i);
+					indexSb.append("]=");
+					indexSb.append(index.getValue());
+					indexSb.append(' ');
+					indexSb.append(value.length());
+					indexSb.append("\n");
+					index.setValue(index.getValue() + value.length());
+					dataSb.append(value);
+					break;
+			}
+			i++;
+		}
+	}
+	
+	private void fillDataObject(StringBuilder indexSb, StringBuilder dataSb, JsonObject obj, String s, Holder<Integer> index){
+		if (obj == null){
+			return;
+		}
+		obj.forEach((k, v) -> {
+			switch(v.getValueType()){
+				case ARRAY:
+					JsonArray jsonArray = (JsonArray)v;
+					fillDataArray(indexSb, dataSb, jsonArray, s + k, index);
+					break;
+				case OBJECT:
+					JsonObject innerObj = (JsonObject)v;
+					fillDataObject(indexSb, dataSb, innerObj, s + k, index);
+					break;
+				case NULL:
+					if (s.length() != 0){
+						indexSb.append(s);
+						indexSb.append('.');
+					}
+					indexSb.append(k);
+					indexSb.append('=');
+					indexSb.append(index.getValue());
+					indexSb.append(' ');
+					indexSb.append("-1\n");
+					break;
+				default:
+					String value = v.toString().replaceFirst("^\"", "").replaceFirst("\"$", "");
+					if (s.length() != 0){
+						indexSb.append(s);
+						indexSb.append('.');
+					}
+					indexSb.append(k);
+					indexSb.append('=');
+					indexSb.append(index.getValue());
+					indexSb.append(' ');
+					indexSb.append(value.length());
+					indexSb.append("\n");
+					index.setValue(index.getValue() + value.length());
+					dataSb.append(value);
+					break;
+			}
+		});
+	}
+	
+	private void fillData(StringBuilder indexSb, StringBuilder dataSb, JsonValue value){
+		Holder<Integer> holder = new Holder<>(0);
+		switch (value.getValueType()){
+			case ARRAY:
+				fillDataArray(indexSb, dataSb, (JsonArray)value, "", holder);
+				break;
+			case OBJECT:
+				fillDataObject(indexSb, dataSb, (JsonObject)value, "", holder);
+				break;
+			case NULL:
+				indexSb.append("data=0 -1\n");
+				break;
+			default:
+				String v = value.toString();
+				indexSb.append("data=0 ");
+				indexSb.append(v.length());
+				indexSb.append("\n");
+				dataSb.append(v);
+		}
 	}
 	
 	private Document(String filepath) throws IOException{
@@ -74,9 +180,16 @@ public class Document {
 		fileChannel = FileChannel.open(Paths.get(filepath + ".dat"), StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE);
 	}
 	
-	private void create(JsonObject object) throws IOException{
-		BufferedWriter writer = new BufferedWriter(new FileWriter(filepath + ".index"));
-		
+	private void create(JsonValue object) throws IOException{
+		BufferedWriter indexWriter = new BufferedWriter(new FileWriter(filepath + ".index"));
+		BufferedWriter dataWriter = new BufferedWriter(new FileWriter(filepath + ".dat"));
+		StringBuilder indexSb = new StringBuilder();
+		StringBuilder dataSb = new StringBuilder();
+		fillData(indexSb, dataSb, object);
+		indexWriter.write(indexSb.toString());
+		dataWriter.write(dataSb.toString());
+		indexWriter.close();
+		dataWriter.close();
 	}
 	
 	private void open() throws IOException{
@@ -142,9 +255,14 @@ public class Document {
 					int[] tab = indexes.get(tabIndex);
 					int index = tab[0];
 					int length = tab[1];
-					byte[] data = new byte[length];
-					map.position(index).get(data, 0, length);
-					results.put(f.toString().trim(), new String(data));
+					if (length > 0){
+						byte[] data = new byte[length];
+						map.position(index).get(data, 0, length);
+						results.put(f.toString().trim(), new String(data));
+					}
+					else{
+						results.put(f.toString().trim(), null);
+					}
 				});
 				return results.isEmpty() ? null : results;
 			}
@@ -156,13 +274,18 @@ public class Document {
 				int[] tab = indexes.get(tabIndex);
 				int index = tab[0];
 				int length = tab[1];
-				byte[] data = new byte[length];
-				String value = new String(data);
-				if (checkValue(where.getJsonObject(name), value) == false){
-					return null;
+				if (length > 0){
+					byte[] data = new byte[length];
+					String value = new String(data);
+					if (checkValue(where.getJsonObject(name), value) == false){
+						return null;
+					}
+					map.position(index).get(data, 0, length);
+					results.put(f.toString().trim(), value);
 				}
-				map.position(index).get(data, 0, length);
-				results.put(f.toString().trim(), value);
+				else{
+					results.put(f.toString().trim(), null);
+				}
 			}
 			return results.isEmpty() ? null : results;
 		}

@@ -17,6 +17,7 @@ import java.util.Map;
 import javax.json.JsonArray;
 import javax.json.JsonException;
 import javax.json.JsonObject;
+import javax.json.JsonValue;
 
 public class Database {
 	private final FileChannel dbFileChannel;
@@ -101,14 +102,13 @@ public class Database {
 		return results;
 	}
 	
-	public void insert(String filepath, JsonObject object) throws IOException{
+	public void insert(String filepath, JsonValue object) throws IOException{
 		synchronized(dbFileChannel){
 			Document doc = Document.createDocument(filepath, object);
 			int length = filepath.length();
-			MappedByteBuffer map = dbFileChannel.map(MapMode.READ_WRITE, fileLength, length + 2);
+			MappedByteBuffer map = dbFileChannel.map(MapMode.READ_WRITE, fileLength, length + 6);
 			map.put(filepath.getBytes());
-			map.putChar(' ');
-			map.putInt(1);
+			map.put(" 1\n".getBytes());
 			map.force();
 			cache(filepath, doc);
 		}

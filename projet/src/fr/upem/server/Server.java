@@ -41,9 +41,7 @@ public class Server extends AbstractVerticle {
 
 	private Map<String, Route> createRouteHTTP(Router routerHTTP) {
 		HashMap<String, Route> routeList = new HashMap<>();
-		routeList.put("insert", routerHTTP.route(HttpMethod.PUT, pathInsertDoc));
 		routeList.put("select", routerHTTP.route(HttpMethod.GET, pathManageDoc));
-		routeList.put("delete", routerHTTP.route(HttpMethod.DELETE, pathManageDoc));
 		return routeList;
 	}
 
@@ -51,7 +49,11 @@ public class Server extends AbstractVerticle {
 		HashMap<String, Route> routeList = new HashMap<>();
 		routeList.put("create", routerHTTPS.route(HttpMethod.POST, pathBdd));
 		routeList.put("delete", routerHTTPS.route(HttpMethod.DELETE, pathManageBdd));
+		routeList.put("insert", routerHTTPS.route(HttpMethod.PUT, pathInsertDoc));
+
 		routeList.put("export", routerHTTPS.route(HttpMethod.GET, pathManageBdd));
+		routeList.put("remove", routerHTTPS.route(HttpMethod.DELETE, pathManageDoc));
+
 		return routeList;
 	}
 
@@ -59,14 +61,15 @@ public class Server extends AbstractVerticle {
 		HashMap<String, Handler<RoutingContext>> map = new HashMap<>();
 		map.put("create", databaseManager::createDatabase);
 		map.put("delete", databaseManager::removeDatabase);
+		map.put("insert", databaseManager::insertDocument);
+
 		map.put("export", databaseManager::exportDatabase);
+		map.put("remove", databaseManager::deleteDocument);
 		return map;
 	}
 
 	private Map<String, Handler<RoutingContext>> createMapHandlerDocument() {
 		HashMap<String, Handler<RoutingContext>> map = new HashMap<>();
-		map.put("insert", databaseManager::insertDocument);
-		map.put("delete", databaseManager::deleteDocument);
 		map.put("select", databaseManager::selectDocument);
 		return map;
 	}

@@ -63,7 +63,7 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	 * web.RoutingContext)
 	 */
 	@Override
-	public void handleInsertDatabaseRequest(RoutingContext arg0) {
+	public void handleInsertDocumentDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
 			ServerResponse.responseDatabase(arg0, "handleInsertDatabaseRequest");
 		});
@@ -77,7 +77,7 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	 * web.RoutingContext)
 	 */
 	@Override
-	public void handleRemoveDatabaseRequest(RoutingContext arg0) {
+	public void handleRemoveDocumentFromDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
 			ServerResponse.responseDatabase(arg0, "handleRemoveDatabaseRequest");
 		});
@@ -91,7 +91,7 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	 * web.RoutingContext)
 	 */
 	@Override
-	public void handleSelectDatabaseRequest(RoutingContext arg0) {
+	public void handleSelectDocumentFromDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
 			ServerResponse.responseDatabase(arg0, "handleSelectDatabaseRequest");
 		});

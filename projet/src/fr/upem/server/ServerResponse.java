@@ -12,7 +12,7 @@ public class ServerResponse {
 	
 	public static void responseDatabase(RoutingContext routingContext,String text){
 		routingContext.response().putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(text.length()))
-		.putHeader("Content-type", "application/json")
+		.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
 		.write(text)
 		.end();
 	}
@@ -31,7 +31,8 @@ public class ServerResponse {
 	
 	private static void sendErrorResponse(RoutingContext routingContext,String error){
 		routingContext.response().putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(error.length()))
-		.putHeader("Content-type", "application/json")
+		.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+		.setStatusCode(404)
 		.write(error)
 		.end();
 	}

@@ -12,6 +12,15 @@ import io.vertx.ext.web.RoutingContext;
  */
 public interface DataBaseHandler {
 
+	default boolean checkAuthentification(RoutingContext routingContext) {
+		HttpServerRequest request = routingContext.request();
+		if (Utils.isAuthentified(request)) {
+			return true;
+		}
+		ServerResponse.authentificationError(routingContext);
+		return false;
+	}
+	
 	public default void createDatabase(RoutingContext routingContext) {
 		if (!checkAuthentification(routingContext)) {
 			return;
@@ -33,29 +42,23 @@ public interface DataBaseHandler {
 		handleExportDatabaseRequest(routingContext);
 	}
 
-	public default boolean checkAuthentification(RoutingContext routingContext) {
-		HttpServerRequest request = routingContext.request();
-		if (Utils.isAuthentified(request)) {
-			return true;
-		}
-		ServerResponse.authentificationError(routingContext);
-		return false;
-	}
-
-	/* Document */
 	public default void selectDocument(RoutingContext routingContext) {
-		// HttpServerRequest request = routingContext.request();
-		handleSelectDatabaseRequest(routingContext);
+		handleSelectDocumentFromDatabaseRequest(routingContext);
 
 	}
 
 	public default void insertDocument(RoutingContext routingContext) {
-		// HttpServerRequest request = routingContext.request();
-		handleInsertDatabaseRequest(routingContext);
+		if (!checkAuthentification(routingContext)) {
+			return;
+		}
+		handleInsertDocumentDatabaseRequest(routingContext);
 	}
 
 	public default void deleteDocument(RoutingContext routingContext) {
-		handleRemoveDatabaseRequest(routingContext);
+		if (!checkAuthentification(routingContext)) {
+			return;
+		}
+		handleRemoveDocumentFromDatabaseRequest(routingContext);
 	}
 
 	public void handleCreateDatabaseRequest(RoutingContext routingContext);
@@ -64,10 +67,10 @@ public interface DataBaseHandler {
 
 	public void handleExportDatabaseRequest(RoutingContext routingContext);
 
-	public void handleRemoveDatabaseRequest(RoutingContext routingContext);
+	public void handleRemoveDocumentFromDatabaseRequest(RoutingContext routingContext);
 
-	public void handleSelectDatabaseRequest(RoutingContext routingContext);
+	public void handleSelectDocumentFromDatabaseRequest(RoutingContext routingContext);
 
-	public void handleInsertDatabaseRequest(RoutingContext routingContext);
+	public void handleInsertDocumentDatabaseRequest(RoutingContext routingContext);
 
 }

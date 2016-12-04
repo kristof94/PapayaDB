@@ -8,9 +8,9 @@ import java.io.UnsupportedEncodingException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import fr.kristof.client.DatabaseClient;
-import fr.kristof.client.Login;
 import fr.upem.server.DataBaseHandler;
 import fr.upem.server.ServerResponse;
+import fr.upem.server.Utils;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -32,24 +32,22 @@ public class DatabaseManagerHandlerRest implements DataBaseHandler {
 	/**
 	 * 
 	 */
-	public DatabaseManagerHandlerRest() {
+	public DatabaseManagerHandlerRest(String ipBddHTTP,String ipBddHTTPS) {
 		client = new DatabaseClient();
-		client.setLogin(new Login("admin","root"));
 		client.setSSLWithKeystore("/home/master/Data/workspace_2/DatabaseClient/keystore.jks");
-		ipHTTPS ="https://127.0.0.1:8889";
-		ipHTTP ="http://127.0.0.1:8888";
+		this.ipHTTPS = ipBddHTTPS;
+		this.ipHTTP = ipBddHTTP;
 	}
 
 	@Override
-	public void handleCreateDatabaseRequest(RoutingContext arg0) {
-		arg0.request().bodyHandler(buffer -> {
+	public void handleCreateDatabaseRequest(RoutingContext arg0) {		
+		arg0.request().bodyHandler( buffer -> {
 			try {
-				String response = client.createDatabase(new String(buffer.getBytes(),"UTF-8"), ipHTTPS+arg0.request().uri());
+				String response = client.createDatabase(new String(buffer.getBytes(),"UTF-8"), ipHTTPS+arg0.request().uri(),Utils.getAuthentification(arg0.request()));
 				ServerResponse.responseDatabase(arg0, response);
 			} catch (JsonProcessingException | UnsupportedEncodingException e) {
 				ServerResponse.responseDatabase(arg0, e.getMessage());
-			}			
-		});
+			}});
 	}	
 	/*
 	 * (non-Javadoc)
@@ -61,7 +59,7 @@ public class DatabaseManagerHandlerRest implements DataBaseHandler {
 	@Override
 	public void handleDropDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
-			String response = client.removeDatabase(ipHTTPS+arg0.request().uri());
+			String response = client.removeDatabase(ipHTTPS+arg0.request().uri(),Utils.getAuthentification(arg0.request()));
 			ServerResponse.responseDatabase(arg0,response);
 		});
 	}
@@ -77,7 +75,7 @@ public class DatabaseManagerHandlerRest implements DataBaseHandler {
 	public void handleExportDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
 			try {
-				String response = client.exportDatabase(ipHTTPS+arg0.request().uri());
+				String response = client.exportDatabase(ipHTTPS+arg0.request().uri(),Utils.getAuthentification(arg0.request()));
 				ServerResponse.responseDatabase(arg0, response);
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
@@ -93,10 +91,10 @@ public class DatabaseManagerHandlerRest implements DataBaseHandler {
 	 * web.RoutingContext)
 	 */
 	@Override
-	public void handleInsertDatabaseRequest(RoutingContext arg0) {
+	public void handleInsertDocumentDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
 			try {
-				String response = client.insertDocument(new String(buffer.getBytes(),"UTF-8"),ipHTTP+arg0.request().uri());
+				String response = client.insertDocument(new String(buffer.getBytes(),"UTF-8"),ipHTTPS+arg0.request().uri(),Utils.getAuthentification(arg0.request()));
 				ServerResponse.responseDatabase(arg0, response);
 			} catch (JsonProcessingException | UnsupportedEncodingException e) {
 				ServerResponse.responseDatabase(arg0, e.getMessage());
@@ -112,9 +110,9 @@ public class DatabaseManagerHandlerRest implements DataBaseHandler {
 	 * web.RoutingContext)
 	 */
 	@Override
-	public void handleRemoveDatabaseRequest(RoutingContext arg0) {
+	public void handleRemoveDocumentFromDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
-			String response =  client.removeDocument(ipHTTP+arg0.request().uri());
+			String response =  client.removeDocument(ipHTTPS+arg0.request().uri(),Utils.getAuthentification(arg0.request()));
 			ServerResponse.responseDatabase(arg0, response);
 		});
 	}
@@ -127,7 +125,7 @@ public class DatabaseManagerHandlerRest implements DataBaseHandler {
 	 * web.RoutingContext)
 	 */
 	@Override
-	public void handleSelectDatabaseRequest(RoutingContext arg0) {
+	public void handleSelectDocumentFromDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
 			String response = client.selectDocument(ipHTTP+arg0.request().uri());
 			ServerResponse.responseDatabase(arg0, response);

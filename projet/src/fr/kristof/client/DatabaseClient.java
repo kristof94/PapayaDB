@@ -74,8 +74,7 @@ public class DatabaseClient {
 	 */
 	public String createDatabase(Data data, String url,String auth) throws JsonProcessingException {
 		String json = mapper.writeValueAsString(data);
-		Query query = new Query("createDatabase", json);
-		return sendSSLQuery(mapper.writeValueAsString(query), url, HTTPMethod.POST,auth);
+		return sendSSLQuery(json, url, HTTPMethod.POST,auth);
 	}
 	
 	/**
@@ -148,7 +147,7 @@ public class DatabaseClient {
 	public String insertDocument(Data data, String url,String auth) throws JsonProcessingException {
 		String json = mapper.writeValueAsString(data);
 		Query query = new Query("insertDocument", json);
-		return sendSSLQuery(mapper.writeValueAsString(query), url, HTTPMethod.PUT,auth);
+		return sendSSLQuery(json, url, HTTPMethod.PUT,auth);
 	}
 	
 	/**

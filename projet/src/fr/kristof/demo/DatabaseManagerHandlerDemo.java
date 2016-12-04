@@ -3,8 +3,16 @@
  */
 package fr.kristof.demo;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fr.kristof.client.Data;
 import fr.kristof.server.DataBaseHandler;
 import fr.kristof.server.ServerResponse;
+import fr.upem.papayadb.database.DatabaseManager;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -12,6 +20,18 @@ import io.vertx.ext.web.RoutingContext;
  *
  */
 public class DatabaseManagerHandlerDemo implements DataBaseHandler {
+
+	private DatabaseManager databaseManager;
+	private final ObjectMapper mapper;
+
+	/**
+	 * @throws IOException
+	 * 
+	 */
+	public DatabaseManagerHandlerDemo() throws IOException {
+		databaseManager = new DatabaseManager("db.txt");
+		mapper = new ObjectMapper();
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -23,7 +43,15 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	@Override
 	public void handleCreateDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
-			ServerResponse.responseDatabase(arg0, buffer.toString());
+			Data data = null;
+			try {
+				data = mapper.readValue(buffer.toString(), Data.class);
+				if(databaseManager.createDatabase(data.name))
+					ServerResponse.responseDatabase(arg0, "Base crée");
+				else ServerResponse.responseDatabase(arg0, "Base already exists.");				
+			} catch (IOException e) {
+				ServerResponse.responseDatabase(arg0, e.getMessage());
+			}
 		});
 	}
 
@@ -36,7 +64,12 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	 */
 	@Override
 	public void handleDropDatabaseRequest(RoutingContext arg0) {
-		ServerResponse.responseDatabase(arg0, arg0.request().getParam("name"));
+		try {
+			databaseManager.deleteDatabase(arg0.request().getParam("name"));
+			ServerResponse.responseDatabase(arg0, "Base supprimé.");
+		} catch (IOException e) {
+			ServerResponse.sendErrorResponse(arg0,e.getMessage());
+		}
 	}
 
 	/*
@@ -48,7 +81,12 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	 */
 	@Override
 	public void handleExportDatabaseRequest(RoutingContext arg0) {
-		ServerResponse.responseDatabase(arg0, arg0.request().getParam("name"));
+		try {
+			String export = databaseManager.exportDatabase(arg0.request().getParam("name"));
+			ServerResponse.responseDatabase(arg0, export);
+		} catch (IOException e) {
+			ServerResponse.sendErrorResponse(arg0, "Erreur lors de l'export de la base.");
+		}
 	}
 
 	/*
@@ -61,6 +99,14 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	@Override
 	public void handleInsertDocumentDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
+			Data data = null;
+			try {
+				data = mapper.readValue(buffer.toString(), Data.class);
+				databaseManager.insertDocument(arg0.request().getParam("name"), data.name, data.value);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			ServerResponse.responseDatabase(arg0, buffer.toString());
 		});
 	}
@@ -75,13 +121,19 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	@Override
 	public void handleRemoveDocumentFromDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
-			ServerResponse.responseDatabase(arg0, arg0.request().getParam("namedoc"));
+			try {
+				databaseManager.deleteDocument(arg0.request().getParam("name"), arg0.request().getParam("namedoc"));
+				ServerResponse.responseDatabase(arg0, arg0.request().getParam("namedoc"));
+			} catch (Exception e) {
+				ServerResponse.sendErrorResponse(arg0, e.getMessage());
+			}
 		});
 	}
 
 	// private final String checkQueryFormatRegex
 	// ="([a-zA-Z\\d]*?)&([a-zA-Z\\d]*?)";
-	//private final String checkQueryFormatRegex = "([a-zA-Z\\d]*?)=([a-zA-Z\\d]*?)";
+	// private final String checkQueryFormatRegex =
+	// "([a-zA-Z\\d]*?)=([a-zA-Z\\d]*?)";
 
 	/*
 	 * (non-Javadoc)
@@ -92,23 +144,27 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	 */
 	@Override
 	public void handleSelectDocumentFromDatabaseRequest(RoutingContext arg0) {
-		ServerResponse.responseDatabase(arg0, arg0.request().params().toString());
-		//detectParameters(arg0.request().getParam("namedoc").toString());
+		try {
+			List<Map<String, String>> data = databaseManager.select(arg0.request().getParam("name"), arg0.request().getParam("namedoc"));
+			data.forEach(m -> {
+				m.entrySet().forEach(e -> System.out.println(e));
+			});
+			ServerResponse.responseDatabase(arg0, arg0.request().params().toString());
+		} catch (IOException e) {
+			ServerResponse.responseDatabase(arg0, e.getMessage());
+		}
+
+		// detectParameters(arg0.request().getParam("namedoc").toString());
 	}
 
 	/*
-	private void detectParameters(String uri) {
-		Objects.requireNonNull(uri);
-		String[] parameter = uri.split("&");
-		HashMap<String,String> mapParameter =  new HashMap<>();
-		for (String str : parameter) {
-			Pattern pattern = Pattern.compile(checkQueryFormatRegex);
-			Matcher matcher = pattern.matcher(str);
-			if (!matcher.matches()) {
-				throw new IllegalAccessError("URL INVALIDE");
-			}
-			mapParameter.put(matcher.group(1), matcher.group(2));
-		}		
-	}*/
+	 * private void detectParameters(String uri) { Objects.requireNonNull(uri);
+	 * String[] parameter = uri.split("&"); HashMap<String,String> mapParameter
+	 * = new HashMap<>(); for (String str : parameter) { Pattern pattern =
+	 * Pattern.compile(checkQueryFormatRegex); Matcher matcher =
+	 * pattern.matcher(str); if (!matcher.matches()) { throw new
+	 * IllegalAccessError("URL INVALIDE"); } mapParameter.put(matcher.group(1),
+	 * matcher.group(2)); } }
+	 */
 
 }

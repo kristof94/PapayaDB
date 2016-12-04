@@ -29,7 +29,7 @@ public class ServerResponse {
 		sendErrorResponse(routingContext, "Error Authentification");
 	}
 	
-	private static void sendErrorResponse(RoutingContext routingContext,String error){
+	public static void sendErrorResponse(RoutingContext routingContext,String error){
 		routingContext.response().putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(error.length()))
 		.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
 		.setStatusCode(404)

@@ -3,6 +3,7 @@
  */
 package fr.kristof.demo;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -29,6 +30,7 @@ public class DatabaseManagerHandlerRest implements DataBaseHandler {
 	private DatabaseClient client;
 	private final String ipHTTPS;
 	private final String ipHTTP;
+
 	/**
 	 * 
 	 */
@@ -42,10 +44,10 @@ public class DatabaseManagerHandlerRest implements DataBaseHandler {
 	@Override
 	public void handleCreateDatabaseRequest(RoutingContext arg0) {		
 		arg0.request().bodyHandler( buffer -> {
-			try {
-				String response = client.createDatabase(new String(buffer.getBytes(),"UTF-8"), ipHTTPS+arg0.request().uri(),Utils.getAuthentification(arg0.request()));
+			try {				
+				String response = client.createDatabase(buffer.toString(), ipHTTPS+arg0.request().uri(),Utils.getAuthentification(arg0.request()));
 				ServerResponse.responseDatabase(arg0, response);
-			} catch (JsonProcessingException | UnsupportedEncodingException e) {
+			} catch ( IOException e) {
 				ServerResponse.responseDatabase(arg0, e.getMessage());
 			}});
 	}	

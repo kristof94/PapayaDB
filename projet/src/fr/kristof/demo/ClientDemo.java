@@ -28,12 +28,14 @@ public class ClientDemo {
 		String auth = DatabaseClient.createBasicAuthentification(new Login("admin","root"));
 		client.setSSLWithKeystore("/home/master/Data/workspace_2/DatabaseClient/keystore.jks","direct11");
 		try {
-			System.out.println(client.createDatabase(new Data("nomdeBDD1"), "https://127.0.0.1:8090/api/database",auth));
-			System.out.println(client.exportDatabase("https://127.0.0.1:8090/api/database/toto",auth));
+			Data bdd = new Data();
+			bdd.name = "test1";
+			System.out.println(client.createDatabase(bdd, "https://127.0.0.1:8090/api/database",auth));
+			/*System.out.println(client.exportDatabase("https://127.0.0.1:8090/api/database/toto",auth));
 			System.out.println(client.removeDatabase("https://127.0.0.1:8090/api/database/test",auth));
 			System.out.println(client.insertDocument(new Data("doc2"), "https://127.0.0.1:8090/api/database/dbname",auth));
 			System.out.println(client.removeDocument("https://127.0.0.1:8090/api/database/test2/doc3",auth));
-			select(client,"http://127.0.0.1:8080/api/database/db/value=2&date=8&test=ok");			
+			select(client,"http://127.0.0.1:8080/api/database/db/value=2&date=8&test=ok");*/	
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}

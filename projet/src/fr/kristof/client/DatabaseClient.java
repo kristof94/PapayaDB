@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.util.Base64;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +29,16 @@ public class DatabaseClient {
 		mapper = new ObjectMapper();
 	}
 
+	private static String encodeBase64(String string) {
+		byte[] bytesEncoded = Base64.getEncoder().encode(string.getBytes());
+		return new String(bytesEncoded);
+	}
+
+	public static String createBasicAuthentification(Login login){
+		return  "Basic "+encodeBase64(login.toString());
+	}
+	
+	
 	public void setSSLWithKeystore(String keystorePath) {
 		System.setProperty("javax.net.ssl.keyStorePassword", "direct11");
 		System.setProperty("javax.net.ssl.trustStore", keystorePath);

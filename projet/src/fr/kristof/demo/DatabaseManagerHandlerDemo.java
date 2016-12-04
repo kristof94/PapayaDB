@@ -23,9 +23,8 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	@Override
 	public void handleCreateDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
-			ServerResponse.responseDatabase(arg0, "handleCreateDatabaseRequest");
-		});
-	}
+			ServerResponse.responseDatabase(arg0, buffer.toString());
+		});	}
 
 	/*
 	 * (non-Javadoc)
@@ -36,9 +35,8 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	 */
 	@Override
 	public void handleDropDatabaseRequest(RoutingContext arg0) {
-		arg0.request().bodyHandler(buffer -> {
-			ServerResponse.responseDatabase(arg0, "handleDropDatabaseRequest");
-		});
+		ServerResponse.responseDatabase(arg0,  arg0.request().getParam("name"));
+
 	}
 
 	/*
@@ -50,9 +48,7 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	 */
 	@Override
 	public void handleExportDatabaseRequest(RoutingContext arg0) {
-		arg0.request().bodyHandler(buffer -> {
-			ServerResponse.responseDatabase(arg0, "handleExportDatabaseRequest");
-		});
+			ServerResponse.responseDatabase(arg0,  arg0.request().getParam("name"));
 	}
 
 	/*
@@ -65,7 +61,7 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	@Override
 	public void handleInsertDocumentDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
-			ServerResponse.responseDatabase(arg0, "handleInsertDatabaseRequest");
+			ServerResponse.responseDatabase(arg0, buffer.toString());
 		});
 	}
 
@@ -79,7 +75,7 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	@Override
 	public void handleRemoveDocumentFromDatabaseRequest(RoutingContext arg0) {
 		arg0.request().bodyHandler(buffer -> {
-			ServerResponse.responseDatabase(arg0, "handleRemoveDatabaseRequest");
+			ServerResponse.responseDatabase(arg0, arg0.request().getParam("namedoc"));
 		});
 	}
 
@@ -92,9 +88,7 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	 */
 	@Override
 	public void handleSelectDocumentFromDatabaseRequest(RoutingContext arg0) {
-		arg0.request().bodyHandler(buffer -> {
-			ServerResponse.responseDatabase(arg0, "handleSelectDatabaseRequest");
-		});
+		ServerResponse.responseDatabase(arg0, arg0.request().getParam("name"));
 	}
 
 }

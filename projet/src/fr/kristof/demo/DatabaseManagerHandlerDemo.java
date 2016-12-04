@@ -8,7 +8,7 @@ import fr.upem.server.ServerResponse;
 import io.vertx.ext.web.RoutingContext;
 
 /**
- * @author master
+ * @author kristof
  *
  */
 public class DatabaseManagerHandlerDemo implements DataBaseHandler {

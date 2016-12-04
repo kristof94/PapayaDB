@@ -4,7 +4,7 @@
 package fr.kristof.client;
 
 /** 
- * @author master
+ * @author kristof
  *
  */
 public class Data {

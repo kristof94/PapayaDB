@@ -7,7 +7,7 @@ import io.vertx.core.http.HttpServerRequest;
 
 /**
  * This class provides functions for authentification
- * @author master
+ * @author kristof
  *
  */
 public class Utils {

@@ -5,7 +5,7 @@ package fr.kristof.client;
 
 /**
  * Object which contains Data and what the database must do.
- * @author master
+ * @author kristof
  *
  */
 public class Query {

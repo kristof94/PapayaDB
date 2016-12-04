@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * API used for create client. It provides HTTPS and HTTP methods.
- * @author master
+ * @author kristof
  * 
  */
 public class DatabaseClient {

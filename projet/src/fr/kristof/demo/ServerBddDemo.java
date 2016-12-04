@@ -7,7 +7,7 @@ import fr.upem.server.Server;
 import io.vertx.core.Vertx;
 
 /**
- * @author master
+ * @author kristof
  *
  */
 public class ServerBddDemo {

@@ -14,7 +14,7 @@ import fr.upem.server.Utils;
 import io.vertx.ext.web.RoutingContext;
 
 /**
- * @author master
+ * @author kristof
  *
  */
 public class DatabaseManagerHandlerRest implements DataBaseHandler {

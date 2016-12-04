@@ -7,7 +7,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 
 /**
- * @author master
+ * @author kristof
  *
  */
 public interface DataBaseHandler {

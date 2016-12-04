@@ -5,7 +5,7 @@ package fr.kristof.client;
 
 /**
  * Login is used for the create a string containing name's user and password separate by a ':'
- * @author master
+ * @author kristof
  *
  */
 public class Login {

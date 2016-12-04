@@ -14,8 +14,9 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 
 /**
- * @author kristof This class describes the implementation of a custom vertx
- *         server
+ * This class describes the implementation of a custom vertx
+ * server
+ * @author kristof 
  *
  */
 public class Server extends AbstractVerticle {

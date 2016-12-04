@@ -10,7 +10,7 @@ import fr.kristof.client.DatabaseClient;
 import fr.kristof.client.Login;
 
 /**
- * @author master
+ * @author kristof
  *
  */
 public class ClientDemo {

@@ -29,9 +29,13 @@ public class Server extends AbstractVerticle {
 
 	private final DataBaseHandler databaseManager;
 
+
 	/**
-	 * 
-	 * @param port
+	 * Create Server implementing vertx server
+	 * @param portHTTP
+	 * @param portHTTPS
+	 * @param dataBaseHandler
+	 * A dataBaseHandler used to indicate what the server must do
 	 */
 	public Server(int portHTTP, int portHTTPS,DataBaseHandler dataBaseHandler) {
 		this.portHTTPS = portHTTPS;
@@ -92,6 +96,10 @@ public class Server extends AbstractVerticle {
 		joinRouteHandler(mapDatabaseHandler, mapRouteHTTPS);
 	}
 	
+	
+	/* (non-Javadoc)
+	 * @see io.vertx.core.AbstractVerticle#start()
+	 */
 	@Override
 	public void start() throws Exception {
 		Router routerHTTP = Router.router(vertx);

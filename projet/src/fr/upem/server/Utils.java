@@ -5,13 +5,29 @@ import java.util.Base64;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 
+/**
+ * This class provides functions for authentification
+ * @author master
+ *
+ */
 public class Utils {
 	
+	/**
+	 * This method decode a base64 string and return the human transcription
+	 * @param string
+	 * @return
+	 *
+	 */
 	public static String decodeBase64(String string) {
 		byte[] byteArray = Base64.getDecoder().decode(string.getBytes());
 		return new String(byteArray);
 	}
 	
+	/**
+	 * @param request
+	 * @return
+	 * Return true if the request has the correct login
+	 */
 	public static boolean isAuthentified(HttpServerRequest request) {
 		String authorization = getAuthentification(request);
 		if (authorization != null && authorization.substring(0, 6).equals("Basic ")) {
@@ -23,6 +39,11 @@ public class Utils {
 		return false;
 	}
 	
+	/**
+	 * @param request
+	 * @return
+	 * Return the authorization field of a HttpServerRequest
+	 */
 	public static String getAuthentification(HttpServerRequest request) {
 		return request.headers().get(HttpHeaders.AUTHORIZATION);
 	}

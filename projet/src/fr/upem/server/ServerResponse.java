@@ -4,12 +4,16 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.ext.web.RoutingContext;
 
 /**
+ * This class provides function which could be used as Server response 
  * @author kristof
- * This class show 
  *
  */
 public class ServerResponse {
 	
+	/**Send request to client with json data
+	 * @param routingContext
+	 * @param text
+	 */
 	public static void responseDatabase(RoutingContext routingContext,String text){
 		routingContext.response().putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(text.length()))
 		.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
@@ -17,16 +21,12 @@ public class ServerResponse {
 		.end();
 	}
 	
+	/**
+	 * Send request to client if authentification is incorrect
+	 * @param routingContext
+	 */
 	public static void authentificationError(RoutingContext routingContext){
 		sendErrorResponse(routingContext, "Error Authentification");
-	}
-	
-	public static void queryError(RoutingContext routingContext){
-		sendErrorResponse(routingContext, "Error Bad Query");
-	}
-	
-	public static void requestError(RoutingContext routingContext){
-		sendErrorResponse(routingContext, "Error Bad request");
 	}
 	
 	private static void sendErrorResponse(RoutingContext routingContext,String error){

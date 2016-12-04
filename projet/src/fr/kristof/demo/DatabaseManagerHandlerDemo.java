@@ -46,11 +46,10 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 			Data data = null;
 			try {
 				data = mapper.readValue(buffer.toString(), Data.class);
-				if(databaseManager.createDatabase(data.name))
-					ServerResponse.responseDatabase(arg0, "Base crée");
-				else ServerResponse.responseDatabase(arg0, "Base already exists.");				
+				databaseManager.createDatabase(data.name);
+				ServerResponse.responseDatabase(arg0, "Base crée");
 			} catch (IOException e) {
-				ServerResponse.responseDatabase(arg0, e.getMessage());
+				ServerResponse.responseDatabase(arg0, "Base already exists");
 			}
 		});
 	}
@@ -68,7 +67,7 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 			databaseManager.deleteDatabase(arg0.request().getParam("name"));
 			ServerResponse.responseDatabase(arg0, "Base supprimé.");
 		} catch (IOException e) {
-			ServerResponse.sendErrorResponse(arg0,e.getMessage());
+			ServerResponse.sendErrorResponse(arg0,"Base inexistante.");
 		}
 	}
 
@@ -102,12 +101,12 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 			Data data = null;
 			try {
 				data = mapper.readValue(buffer.toString(), Data.class);
-				databaseManager.insertDocument(arg0.request().getParam("name"), data.name, data.value);
+				databaseManager.insertDocument(arg0.request().getParam("name"), data.name,mapper.writeValueAsString(data));
+				ServerResponse.responseDatabase(arg0, "Insertion réussie.");
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				ServerResponse.sendErrorResponse(arg0, "Probleme d'insertion.");
 			}
-			ServerResponse.responseDatabase(arg0, buffer.toString());
+
 		});
 	}
 
@@ -125,7 +124,7 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 				databaseManager.deleteDocument(arg0.request().getParam("name"), arg0.request().getParam("namedoc"));
 				ServerResponse.responseDatabase(arg0, arg0.request().getParam("namedoc"));
 			} catch (Exception e) {
-				ServerResponse.sendErrorResponse(arg0, e.getMessage());
+				ServerResponse.sendErrorResponse(arg0, "Remove document.");
 			}
 		});
 	}
@@ -145,10 +144,7 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	@Override
 	public void handleSelectDocumentFromDatabaseRequest(RoutingContext arg0) {
 		try {
-			List<Map<String, String>> data = databaseManager.select(arg0.request().getParam("name"), arg0.request().getParam("namedoc"));
-			data.forEach(m -> {
-				m.entrySet().forEach(e -> System.out.println(e));
-			});
+			Map<String, Map<String, String>> data = databaseManager.select(arg0.request().getParam("name"), arg0.request().getParam("namedoc"));
 			ServerResponse.responseDatabase(arg0, arg0.request().params().toString());
 		} catch (IOException e) {
 			ServerResponse.responseDatabase(arg0, e.getMessage());

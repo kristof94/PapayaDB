@@ -99,7 +99,7 @@ public class DatabaseManagerHandlerRest implements DataBaseHandler {
 				String response = client.insertDocument(new String(buffer.getBytes(),"UTF-8"),ipHTTPS+arg0.request().uri(),Utils.getAuthentification(arg0.request()));
 				ServerResponse.responseDatabase(arg0, response);
 			} catch (JsonProcessingException | UnsupportedEncodingException e) {
-				ServerResponse.responseDatabase(arg0, e.getMessage());
+				ServerResponse.sendErrorResponse(arg0, e.getMessage());
 			}
 		});
 	}

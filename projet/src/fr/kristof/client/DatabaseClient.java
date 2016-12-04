@@ -50,9 +50,11 @@ public class DatabaseClient {
 	/**
 	 * @param keystorePath
 	 * The path of your keystore.jks
+	 * @param password
+	 * The password of your keystore.jks
 	 */
-	public void setSSLWithKeystore(String keystorePath) {
-		System.setProperty("javax.net.ssl.keyStorePassword", "direct11");
+	public void setSSLWithKeystore(String keystorePath,String password) {
+		System.setProperty("javax.net.ssl.keyStorePassword", password);
 		System.setProperty("javax.net.ssl.trustStore", keystorePath);
 		System.setProperty("javax.net.ssl.keyStore", keystorePath);
 		System.setProperty("javax.net.ssl.trustStoreType", "jks");
@@ -189,27 +191,32 @@ public class DatabaseClient {
 			return e.getMessage();
 		}
 	}
+	
 	private Stream<String> manageQuery(String query, String url, HTTPMethod method) throws IOException {
 		HttpURLConnection connection = createHTTPQuery(new URL(url), method.toString());
+		writeQuerytoHttpURLConnection(query, connection);
+		return getRequest(connection);
+	}
+
+	private void writeQuerytoHttpURLConnection(String query, HttpURLConnection connection) throws IOException {
 		if (query != null) {
 			connection.getOutputStream().write(query.getBytes());
 			connection.getOutputStream().flush();
 		}
-		return getRequest(connection);
 	}
 
 	private Stream<String> manageSSLQuery(String query, String url, HTTPMethod method,String auth) throws IOException {
 		HttpsURLConnection connection = createHTTPSQuery(new URL(url), method.toString(),auth);
-		if (query != null) {
-			connection.getOutputStream().write(query.getBytes());
-			connection.getOutputStream().flush();
-		}
+		writeQuerytoHttpURLConnection(query, connection);
 		return getRequest(connection);
 	}
 
-	private Stream<String> getRequest(HttpURLConnection connection) throws IOException {
-		InputStream in = connection.getInputStream();
-		return Stream.of(new String(in.readAllBytes()));
+	private Stream<String> getRequest(HttpURLConnection connection) throws IOException {		
+		try(InputStream in = connection.getInputStream()){
+			Stream<String> stream = Stream.of(new String(in.readAllBytes()));
+			in.close();
+			return stream;
+		}
 	}
 
 	private HttpsURLConnection createHTTPSQuery(URL url, String method,String basicAuth) throws IOException {

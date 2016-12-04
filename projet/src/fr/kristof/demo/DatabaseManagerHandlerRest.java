@@ -34,7 +34,7 @@ public class DatabaseManagerHandlerRest implements DataBaseHandler {
 	 */
 	public DatabaseManagerHandlerRest(String ipBddHTTP,String ipBddHTTPS) {
 		client = new DatabaseClient();
-		client.setSSLWithKeystore("/home/master/Data/workspace_2/DatabaseClient/keystore.jks");
+		client.setSSLWithKeystore("/home/master/Data/workspace_2/DatabaseClient/keystore.jks","direct11");
 		this.ipHTTPS = ipBddHTTPS;
 		this.ipHTTP = ipBddHTTP;
 	}

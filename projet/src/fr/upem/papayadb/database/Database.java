@@ -10,11 +10,21 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.json.JsonObject;
 
+/**
+ * Class representing a document-oriented database<br>
+ * A database is represented by a file listing all documents that are or were contained in it
+ * and a number telling whether or not the document is still in.<br>
+ * When the number of deleted files becomes too high, the database will by itself remove all lines with a not-contained-anymore document.<br>
+ * The database implements a LRU cache for the documents.
+ * @author jason
+ *
+ */
 public class Database {
 	private final FileChannel dbFileChannel;
 	private long fileLength;
@@ -23,16 +33,30 @@ public class Database {
 	private int deletedDocuments;
 	private int deletedDocumentsThreshold;
 
-	public Database(Path filepath, int cacheCapacity) throws IOException {
+	/**
+	 * Creates a database
+	 * @param filename The name of the database to create
+	 * @param cacheCapacity	The capacity of the cache
+	 * @param deletedDocumentsThreshold the maximum of deleted documents the file can contain
+	 * @throws IOException If some I/O error occurs
+	 */
+	public Database(String filename, int cacheCapacity, int deletedDocumentsThreshold) throws IOException {
+		Path filepath = Paths.get(filename);
 		dbFileChannel = FileChannel.open(filepath, StandardOpenOption.CREATE, StandardOpenOption.READ,
 				StandardOpenOption.WRITE);
 		cache = new ArrayDeque<>();
 		fileLength = new File(filepath.toString()).length();
 		this.cacheCapacity = cacheCapacity;
+		this.deletedDocumentsThreshold = deletedDocumentsThreshold;
 	}
 
+	/**
+	 * Creates a database
+	 * @param filename The name of the database to create
+	 * @throws IOException If some I/O error occurs
+	 */
 	public Database(String filename) throws IOException {
-		this(Paths.get(filename), 32);
+		this(filename, 32, 32);
 	}
 
 	private void cache(String path, Document doc) throws IOException {
@@ -90,21 +114,33 @@ public class Database {
 		return paths;
 	}
 
-	public List<Map<String, String>> select(String request) throws IOException {
+	/**
+	 * Retrieves data
+	 * @param where A list of values to check
+	 * @return The data of all documents corresponding to the <code>where<code> clause
+	 * @throws IOException IOException If some I/O error occurs
+	 */
+	public Map<String, Map<String, String>> select(String where) throws IOException {
 		synchronized (dbFileChannel) {
-			List<Map<String, String>> results = new ArrayList<>();
+			Map<String, Map<String, String>> results = new HashMap<>();
 			List<String> paths = getDocumentPaths();
 			for (String path : paths) {
 				Document doc = getDocument(path);
-				Map<String, String> row = doc.select(request);
+				Map<String, String> row = doc.select(where);
 				if (row != null) {
-					results.add(row);
+					results.put(path, row);
 				}
 			}
 			return results;
 		}
 	}
 
+	/**
+	 * Inserts a document
+	 * @param filepath The name of the document to insert
+	 * @param jsonObject The document's data
+	 * @throws IOException If some I/O error occurs
+	 */
 	public void insert(String filepath, JsonObject jsonObject) throws IOException {
 		synchronized (dbFileChannel) {
 			Document doc = Document.createDocument(filepath, jsonObject);
@@ -117,7 +153,12 @@ public class Database {
 		}
 	}
 
-	public void delete(String name) throws Exception {
+	/**
+	 * Deletes a document
+	 * @param name The name of the document to delete
+	 * @throws IOException If some I/O error occurs
+	 */
+	public void delete(String name) throws IOException {
 		synchronized (dbFileChannel) {
 			uncacheDocument(name);
 			MappedByteBuffer charBuffer = dbFileChannel.map(MapMode.READ_WRITE, 0, fileLength);
@@ -141,6 +182,11 @@ public class Database {
 		}
 	}
 
+	/**
+	 * Closes the database<br>
+	 * This method forces all documents in-cache to get closed.
+	 * @throws IOException If some I/O error occurs
+	 */
 	public void close() throws IOException {
 		synchronized (dbFileChannel) {
 			dbFileChannel.close();
@@ -150,23 +196,51 @@ public class Database {
 		}
 	}
 
+	/**
+	 * Removes all entries from the database<br>
+	 * This method forces all documents in-cache to get closed.
+	 * @throws IOException If some I/O error occurs
+	 */
 	public void clear() throws IOException {
 		synchronized (dbFileChannel) {
 			MappedByteBuffer map = dbFileChannel.map(MapMode.READ_WRITE, 0, fileLength);
 			map.clear();
 			map.force();
 			fileLength = 0;
-			cache.clear();
+			while (cache.isEmpty() == false) {
+				cache.pop().getV2().close();
+			}
+			deletedDocuments = 0;
 		}
 	}
 
+	/**
+	 * Exports all data in the database
+	 * @return A string representation of all data in the database
+	 * @throws IOException If some I/O error occurs
+	 */
 	public String export() throws IOException {
 		synchronized (dbFileChannel) {
 			return select("").toString();
 		}
 	}
+	
+	/**
+	 * Sets a new limit of deleted documents
+	 * @param limit The new maximum of deleted documents the database can contain
+	 * @throws IOException If some I/O error occurs
+	 */
+	public void setDeletedDocumentsThreshold(int limit) throws IOException{
+		if (limit < 0){
+			throw new IllegalArgumentException("limit must be positive");
+		}
+		deletedDocumentsThreshold = limit;
+		if (deletedDocuments >= deletedDocumentsThreshold){
+			rebuild();
+		}
+	}
 
-	public void rebuild() throws IOException {
+	private void rebuild() throws IOException {
 		synchronized (dbFileChannel) {
 			MappedByteBuffer map = dbFileChannel.map(MapMode.READ_WRITE, 0, fileLength);
 			StringBuilder sb = new StringBuilder();

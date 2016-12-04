@@ -3,10 +3,6 @@
  */
 package fr.kristof.demo;
 
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import fr.upem.server.DataBaseHandler;
 import fr.upem.server.ServerResponse;
 import io.vertx.ext.web.RoutingContext;
@@ -83,9 +79,10 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 		});
 	}
 
-	private final String checkQueryFormatRegex ="([a-zA-Z\\d]*?)=([a-zA-Z\\d]*?)&([a-zA-Z\\d]*?)=([a-zA-Z\\d]*?)$"; 
+	// private final String checkQueryFormatRegex
+	// ="([a-zA-Z\\d]*?)&([a-zA-Z\\d]*?)";
+	//private final String checkQueryFormatRegex = "([a-zA-Z\\d]*?)=([a-zA-Z\\d]*?)";
 
-	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -96,18 +93,22 @@ public class DatabaseManagerHandlerDemo implements DataBaseHandler {
 	@Override
 	public void handleSelectDocumentFromDatabaseRequest(RoutingContext arg0) {
 		ServerResponse.responseDatabase(arg0, arg0.request().params().toString());
-		detectParameters(arg0.request().getParam("namedoc").toString());
+		//detectParameters(arg0.request().getParam("namedoc").toString());
 	}
 
-	private void detectParameters(String uri){
-		Objects.requireNonNull(uri);	
-	    Pattern pattern = Pattern.compile(checkQueryFormatRegex);
-	    Matcher matcher = pattern.matcher(uri);
-	    System.out.println(uri);
-	    if(!matcher.matches()){
-	    	throw new IllegalAccessError("URL INVALIDE");
-	    }
-	    System.out.println(matcher.group());
-	}
-	
+	/*
+	private void detectParameters(String uri) {
+		Objects.requireNonNull(uri);
+		String[] parameter = uri.split("&");
+		HashMap<String,String> mapParameter =  new HashMap<>();
+		for (String str : parameter) {
+			Pattern pattern = Pattern.compile(checkQueryFormatRegex);
+			Matcher matcher = pattern.matcher(str);
+			if (!matcher.matches()) {
+				throw new IllegalAccessError("URL INVALIDE");
+			}
+			mapParameter.put(matcher.group(1), matcher.group(2));
+		}		
+	}*/
+
 }

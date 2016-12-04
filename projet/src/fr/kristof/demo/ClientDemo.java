@@ -33,8 +33,7 @@ public class ClientDemo {
 			System.out.println(client.removeDatabase("https://127.0.0.1:8090/api/database/test",auth));
 			System.out.println(client.insertDocument(new Data("doc2"), "https://127.0.0.1:8090/api/database/dbname",auth));
 			System.out.println(client.removeDocument("https://127.0.0.1:8090/api/database/test2/doc3",auth));
-			select(client,"http://127.0.0.1:8080/api/database/db/value=2&date=8");
-			
+			select(client,"http://127.0.0.1:8080/api/database/db/value=2&date=8&test=ok");			
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}

@@ -27,7 +27,6 @@ public class Server extends AbstractVerticle {
 	private final String pathBdd = "/api/database";
 	private final String pathInsertDoc = "/api/database/:name";
 	private final String pathManageDoc = "/api/database/:name/:namedoc";
-
 	private final DataBaseHandler databaseManager;
 
 

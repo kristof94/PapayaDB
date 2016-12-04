@@ -211,7 +211,8 @@ public class DatabaseClient {
 		return getRequest(connection);
 	}
 
-	private Stream<String> getRequest(HttpURLConnection connection) throws IOException {		
+	private Stream<String> getRequest(HttpURLConnection connection) throws IOException {
+		
 		try(InputStream in = connection.getInputStream()){
 			Stream<String> stream = Stream.of(new String(in.readAllBytes()));
 			in.close();

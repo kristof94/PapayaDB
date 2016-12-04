@@ -15,6 +15,16 @@ import fr.kristof.client.Login;
  */
 public class ClientDemo {
 		
+	public static void select(DatabaseClient client,String url){
+		long start = System.currentTimeMillis();
+		System.out.println(client.selectDocument(url));
+		long end = System.currentTimeMillis();
+		long time = (end - start);
+		System.out.println(time +" ms.");
+	}
+	
+	
+	
 	public static void main(String[] args) {		
 		DatabaseClient client = new DatabaseClient();
 		String auth = DatabaseClient.createBasicAuthentification(new Login("admin","root"));
@@ -25,7 +35,7 @@ public class ClientDemo {
 			System.out.println(client.removeDatabase("https://127.0.0.1:8090/api/database/test",auth));
 			System.out.println(client.insertDocument(new Data("doc2"), "https://127.0.0.1:8090/api/database/test2",auth));
 			System.out.println(client.removeDocument("https://127.0.0.1:8090/api/database/test2/doc3",auth));
-			System.out.println(client.selectDocument("http://127.0.0.1:8080/api/database/test2/doc3"));
+			select(client,"http://127.0.0.1:8080/api/database/db/qsdqsdq");
 			
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();

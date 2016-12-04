@@ -46,11 +46,15 @@
 				<attribute name="Main-Class" value="fr.kristof.demo.ServerDatabase"/>
 			</manifest>
 		</jar>
-		<jar destfile="build/jar/clientAPI.jar" basedir="build/classes/fr/kristof/client" >
-					<fileset dir="${build.dir}">
-						<include name="**/*" />
-					</fileset>
+		<jar destfile="build/jar/clientAPI.jar" basedir="build/classes" >
+			<fileset dir="${build.dir}">
+				<include name="fr/kristof/client/**" />
+				<include name="com/**" />
+			</fileset>
+			<manifest>
+			</manifest>
 		</jar>
+
 	</target>
 
 	<target name="clean-build" depends="clean,jar"/>

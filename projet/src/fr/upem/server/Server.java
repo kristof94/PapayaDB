@@ -54,10 +54,8 @@ public class Server extends AbstractVerticle {
 		routeList.put("create", routerHTTPS.route(HttpMethod.POST, pathBdd));
 		routeList.put("delete", routerHTTPS.route(HttpMethod.DELETE, pathManageBdd));
 		routeList.put("insert", routerHTTPS.route(HttpMethod.PUT, pathInsertDoc));
-
 		routeList.put("export", routerHTTPS.route(HttpMethod.GET, pathManageBdd));
 		routeList.put("remove", routerHTTPS.route(HttpMethod.DELETE, pathManageDoc));
-
 		return routeList;
 	}
 
@@ -66,7 +64,6 @@ public class Server extends AbstractVerticle {
 		map.put("create", databaseManager::createDatabase);
 		map.put("delete", databaseManager::removeDatabase);
 		map.put("insert", databaseManager::insertDocument);
-
 		map.put("export", databaseManager::exportDatabase);
 		map.put("remove", databaseManager::deleteDocument);
 		return map;

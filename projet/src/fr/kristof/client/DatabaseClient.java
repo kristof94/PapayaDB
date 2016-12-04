@@ -184,6 +184,7 @@ public class DatabaseClient {
 			return e.getMessage();
 		}
 	}
+	
 	private String sendQuery(String query, String url, HTTPMethod method) {
 		try {
 			return manageQuery(query, url, method).collect(Collectors.joining());
@@ -211,8 +212,7 @@ public class DatabaseClient {
 		return getRequest(connection);
 	}
 
-	private Stream<String> getRequest(HttpURLConnection connection) throws IOException {
-		
+	private Stream<String> getRequest(HttpURLConnection connection) throws IOException {		
 		try(InputStream in = connection.getInputStream()){
 			Stream<String> stream = Stream.of(new String(in.readAllBytes()));
 			in.close();

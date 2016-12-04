@@ -30,11 +30,14 @@ public class Utils {
 	 */
 	public static boolean isAuthentified(HttpServerRequest request) {
 		String authorization = getAuthentification(request);
+		return checkAuthorization(authorization);
+	}
+	
+	private static boolean checkAuthorization(String authorization){
 		if (authorization != null && authorization.substring(0, 6).equals("Basic ")) {
 			String identifiant = authorization.substring(6);
 			String login[] = Utils.decodeBase64(identifiant).split(":");
-			return (login[0].equals("admin") & login[1].equals("root"));			
-
+			return (login[0].equals("admin") & login[1].equals("root"));
 		}
 		return false;
 	}

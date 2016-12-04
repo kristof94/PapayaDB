@@ -3,8 +3,8 @@
  */
 package fr.kristof.demo;
 
-import fr.upem.server.DataBaseHandler;
-import fr.upem.server.ServerResponse;
+import fr.kristof.server.DataBaseHandler;
+import fr.kristof.server.ServerResponse;
 import io.vertx.ext.web.RoutingContext;
 
 /**

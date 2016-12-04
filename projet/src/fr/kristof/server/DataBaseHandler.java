@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fr.upem.server;
+package fr.kristof.server;
 
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;

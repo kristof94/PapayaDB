@@ -3,7 +3,7 @@
  */
 package fr.kristof.demo;
 
-import fr.upem.server.Server;
+import fr.kristof.server.Server;
 import io.vertx.core.Vertx;
 
 /**

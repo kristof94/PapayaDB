@@ -8,9 +8,9 @@ import java.io.UnsupportedEncodingException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import fr.kristof.client.DatabaseClient;
-import fr.upem.server.DataBaseHandler;
-import fr.upem.server.ServerResponse;
-import fr.upem.server.Utils;
+import fr.kristof.server.DataBaseHandler;
+import fr.kristof.server.ServerResponse;
+import fr.kristof.server.Utils;
 import io.vertx.ext.web.RoutingContext;
 
 /**

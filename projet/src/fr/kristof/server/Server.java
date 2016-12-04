@@ -1,4 +1,4 @@
-package fr.upem.server;
+package fr.kristof.server;
 
 import java.util.HashMap;
 import java.util.Map;

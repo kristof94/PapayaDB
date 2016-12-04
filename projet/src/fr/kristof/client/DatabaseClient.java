@@ -18,8 +18,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
+ * API used for create client. It provides HTTPS and HTTP methods.
  * @author master
- *
+ * 
  */
 public class DatabaseClient {
 
@@ -34,11 +35,22 @@ public class DatabaseClient {
 		return new String(bytesEncoded);
 	}
 
+	
+	/**
+	 * @param login
+	 * Login with user and password 
+	 * @return
+	 * Return a string containing header for basic authentification
+	 */
 	public static String createBasicAuthentification(Login login){
 		return  "Basic "+encodeBase64(login.toString());
 	}
 	
 	
+	/**
+	 * @param keystorePath
+	 * The path of your keystore.jks
+	 */
 	public void setSSLWithKeystore(String keystorePath) {
 		System.setProperty("javax.net.ssl.keyStorePassword", "direct11");
 		System.setProperty("javax.net.ssl.trustStore", keystorePath);
@@ -46,38 +58,119 @@ public class DatabaseClient {
 		System.setProperty("javax.net.ssl.trustStoreType", "jks");
 	}
 
+	/**
+	 * Create database
+	 * @param data
+	 * Data which is sent
+	 * @param url
+	 * The target url
+	 * @param auth
+	 * Represents the authentification field
+	 * @return
+	 * The response sent by the server
+	 * @throws JsonProcessingException
+	 */
 	public String createDatabase(Data data, String url,String auth) throws JsonProcessingException {
 		String json = mapper.writeValueAsString(data);
 		Query query = new Query("createDatabase", json);
 		return sendSSLQuery(mapper.writeValueAsString(query), url, HTTPMethod.POST,auth);
 	}
 	
+	/**
+	 * @param data
+	 * Data ins string already in format json which is sent
+	 * @param url
+	 * The target url
+	 * @param auth
+	 * Represents the authentification field
+	 * @return
+	 * The response sent by the server
+	 * @throws JsonProcessingException
+	 */
 	public String createDatabase(String data, String url,String auth) throws JsonProcessingException {
 		return sendSSLQuery(data, url, HTTPMethod.POST,auth);
 	}
 
+	/**
+	 * Remove database
+	 * @param url
+	 * The target url
+	 * @param auth
+	 * Represents the authentification field
+	 * @return
+	 * The response sent by the server
+	 */
 	public String removeDatabase(String url,String auth){
 		return sendSSLQuery(null, url, HTTPMethod.DELETE,auth);
 	}
 
+	/**
+	 * Export database
+	 * @param url
+	 * The target url
+	 * @param auth
+	 * Represents the authentification field
+	 * @return
+	 * The response sent by the server
+	 * @throws JsonProcessingException
+	 */
 	public String exportDatabase(String url,String auth) throws JsonProcessingException {
 		return sendSSLQuery(null, url, HTTPMethod.GET,auth);
 	}
 
+	/**
+	 * Remove document
+	 * @param url
+	 * The target url
+	 * @param auth
+	 * Represents the authentification field
+	 * @return
+	 * The response sent by the server
+	 */
 	public String removeDocument(String url,String auth) {
 		 return sendSSLQuery(null, url, HTTPMethod.DELETE,auth);
 	}
 
+	/**
+	 * Insert document
+	 * @param data
+	 * Data which is sent
+	 * @param url
+	 * The target url
+	 * @param auth
+	 * Represents the authentification field
+	 * @return
+	 * The response sent by the server
+	 * @throws JsonProcessingException
+	 */
 	public String insertDocument(Data data, String url,String auth) throws JsonProcessingException {
 		String json = mapper.writeValueAsString(data);
 		Query query = new Query("insertDocument", json);
 		return sendSSLQuery(mapper.writeValueAsString(query), url, HTTPMethod.PUT,auth);
 	}
 	
+	/**
+	 * Insert document
+	 * @param data
+	 * Data ins string already in format json which is sent
+	 * @param url
+	 * The target url
+	 * @param auth
+	 * Represents the authentification field
+	 * @return
+	 * The response sent by the server
+	 * @throws JsonProcessingException
+	 */
 	public String insertDocument(String data, String url,String auth) throws JsonProcessingException {
 		return sendSSLQuery(data, url, HTTPMethod.PUT,auth);
 	}
 
+	/**
+	 * Select document
+	 * @param url
+	 * The target url
+	 * @return
+	 */
 	public String selectDocument(String url) {
 		return sendQuery(null, url, HTTPMethod.GET);
 	}
